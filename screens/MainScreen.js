@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "flex-end",
     alignItems: "flex-end",
+    marginTop: 50,
   },
   toolbarContainer: {
     justifyContent: "space-between",
