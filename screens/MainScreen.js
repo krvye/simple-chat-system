@@ -16,24 +16,39 @@ import { Ionicons } from "@expo/vector-icons";
 // React Hooks
 import { useEffect, useState } from "react";
 
+// Firebase Functions
+import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
+import db from "../services/firebase/firebaseConfig";
+
 // Main Function
 const MainScreen = () => {
   // State Management
   const [messages, setMessages] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
 
+  // Firestore Reference
+  const messageId = Date.now().toString();
+  const newChatRef = doc(db, "chat", `message_${messageId}`);
+  const chatRef = collection(db, "chat");
+
   // Event Handlers
   const handleTextInput = (text) => {
     setMessages(text);
   };
 
-  const handleButtonPress = () => {
-    setChatHistory((prevMessages) => {
-      return [
-        ...prevMessages,
-        { id: Math.random().toString(), text: messages },
-      ];
-    });
+  const handleButtonPress = async () => {
+    // Data
+    const data = { id: Math.random().toString(), text: messages };
+
+    // Basic storing of data using state management
+    // setChatHistory((prevMessages) => {
+    //   return [...prevMessages, data];
+    // });
+
+    // Storing data in Firestore
+    await setDoc(newChatRef, data);
+
+    // Clear the input
     setMessages("");
   };
 
@@ -41,9 +56,20 @@ const MainScreen = () => {
     return <Text style={styles.message}>{item.text}</Text>;
   };
 
-  // Console Log
+  // Get from firebase
   useEffect(() => {
-    console.log(chatHistory);
+    const unsubscribe = onSnapshot(chatRef, (querySnapshot) => {
+      const chatHistoryArray = [];
+      querySnapshot.forEach((doc) => {
+        chatHistoryArray.push(doc.data());
+      });
+      setChatHistory(chatHistoryArray);
+    });
+
+    // Cleanup function to unsubscribe from snapshot listener when component unmounts
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (
